@@ -6,6 +6,7 @@ import (
 	"strings"
 	"io"
 	"io/ioutil"
+	"fmt"
 )
 
 // 读取一个端口的内容并保存到自身
@@ -13,13 +14,12 @@ func (this *PortRule) readConfig(constr string) error {
 	startRead := false
 	muxRule := MuxRule{Type: IsAFunc}
 	read := ""
-	cc := ""
+	cc := "" // 类型信息
+	lastKuo := 0
 	for i, s := range constr {
-
 		if startRead {
 			read += string(s)
 		}
-
 		// 处理括号
 		// 判断一个端口的开始和结束
 		if s == ']' {
@@ -39,14 +39,17 @@ func (this *PortRule) readConfig(constr string) error {
 				}
 				break
 			case IsAEasy:
-				cs := strings.Split(strings.TrimSpace(read[ind:len(read)-1]), "=")
+				cs := strings.Split(strings.TrimSpace(read[ind+7:len(read)-1]), "=")
 				if cs[0] == "EasyReceive" { // 上传需要的参数和别的不一样,要单独处理
 					muxRule.Type = IsAReceive
 					in := strings.Index(read, "(")
 					if in != -1 {
 						num := read[in+1 : len(read)-2]
+						pat := read[ind+19 : in] // 去掉前面没用的部分,去掉easy://,去掉EasyReceive=
 						r := Rule{}
-						r.Analysis(num)
+						fmt.Println(pat)
+						muxRule.analysis(`(path=` + pat + `,""="")`)
+						r.analysis(num)
 						muxRule.Rules = append(muxRule.Rules, r)
 					}
 					break
@@ -70,18 +73,19 @@ func (this *PortRule) readConfig(constr string) error {
 			}
 
 			this.Muxs = append(this.Muxs, muxRule)
+			lastKuo = i
 			startRead = false
 			read = ""
 			muxRule = MuxRule{Type: IsAFunc}
 			cc = ""
 			continue
 		}
-		if constr[i-1:i+1] == ":[" {
-			this.PortPath = constr[:i-1]
+		if len(constr) >= i+2 && constr[i:i+2] == ":[" {
+			this.PortPath = strings.TrimSpace(constr[lastKuo+1 : i])
 			// 读取类型信息，去掉空格
-			cc = strings.TrimSpace(constr[i+1 : i+8])
+			cc = strings.TrimSpace(constr[i+2 : i+9])
 			for j := i; len(cc) < 7; j++ {
-				cc += strings.TrimSpace(string(constr))
+				cc += strings.TrimSpace(string(constr[j+9]))
 			}
 			switch cc {
 			case "file://":
@@ -100,6 +104,10 @@ func (this *PortRule) readConfig(constr string) error {
 
 // 读取规则文件并保存到自身
 func (this *MuxRule) readFile(filePath string) error {
+	err := IsRule(filePath)
+	if err != IsRuleError {
+		return err
+	}
 	f, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -114,12 +122,12 @@ func (this *MuxRule) readFile(filePath string) error {
 			}
 			return err
 		}
-		if len(line) == 0 {
+		if len(line) == 0 || line[:2] == "/*" || line == "rule" {
 			continue
 		}
 
 		rule := Rule{}
-		err = rule.Analysis(line)
+		err = rule.analysis(line)
 		if err != nil {
 			return err
 		}
@@ -146,7 +154,7 @@ func (this *MuxRule) analysis(constr string) error {
 		}
 		if s == ')' {
 			startRead = false
-			rule.Analysis(read[:len(read)-1]) // 去掉右括号
+			rule.analysis(read[:len(read)-1]) // 去掉右括号
 			this.Rules = append(this.Rules, rule)
 			read = ""
 			continue
@@ -156,7 +164,7 @@ func (this *MuxRule) analysis(constr string) error {
 }
 
 // 解析一条规则并保存到自身
-func (this *Rule) Analysis(str string) error {
+func (this *Rule) analysis(str string) error {
 	str = strings.TrimSpace(str)
 	ss := strings.Split(str, ",")
 	if len(ss) != 2 {

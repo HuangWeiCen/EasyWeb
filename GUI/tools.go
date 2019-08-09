@@ -15,7 +15,7 @@ import (
 )
 
 // 判断是规则文件还是配置文件并返回读取的内容，规则文件返回true
-func IsRuleAndOpen(filePath string) error {
+func IsRule(filePath string) error {
 	if path.Ext(filePath) != ".easy" {
 		return NotKnowFileError
 	}
@@ -47,7 +47,7 @@ func IsRuleAndOpen(filePath string) error {
 // 读取文件并返回一个[]RortRule
 func ReadConfigFile(filePath ...string) (prs []PortRule, err error) {
 	for _, f := range filePath {
-		err := IsRuleAndOpen(f)
+		err := IsRule(f)
 		if err == NotRuleError {
 			pr, err := ReadOneConfigFile(f)
 			if err != nil {
@@ -71,6 +71,7 @@ func ReadOneConfigFile(file string) (prs []PortRule, err error) {
 	pr := PortRule{}
 	var startRead bool
 	var read string
+	os.Exit(0)
 	for {
 		line, err := buf.ReadString('\n')
 		line = strings.TrimSpace(line)

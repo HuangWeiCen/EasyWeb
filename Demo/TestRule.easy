@@ -3,4 +3,4 @@
 rule
 
 Q=What is your name , A= My name is EasyWeb
-Q =Hello , A = Hi
+Q =Hello , A = return://C:\Users\huang\Desktop\GolangProject\EasyWeb\Demo\return.txt
