@@ -1,0 +1,76 @@
+
+/*在网上没找到适合的文件格式，就自己造了个格式，格式本身很简单，冒号左右两边分别是端口号和一个大括号，
+/*大括号里冒号两边是路径和中括号，中括号里每个小括号代表一个规则，左中括号后面应该紧跟着类型标识
+/*小括号内逗号左边是服务器可能会接收到的参数名和参数值，右边是对应的返回参数名和参数值.
+/*小括号内的出参值（最后那一项）如果以“return://”不含引号 表示返回一个文件中的内容，系统会读取地址文件，并将内容返回
+/*
+/*标识介绍：
+/*      easy：特殊模式，详见下方关键字部分（有关键字的就是特殊模式）
+/*      func：普通模式，后面的小括号内是一条条规则
+/*      file：普通模式，后面是规则文件路径
+/*
+/*
+/*配置文件非注释的第一行请写上 “config” 不含逗号，这表示这是一个配置文件而非规则文件,
+/*反之规则文件请写上“rule” 同样不含逗号,规则文件写法参考小括号内的写法
+/*
+/*  “/*”不含逗号 表示注释，在你需要注释的行前加上这个符号系统将不会解析该行
+/*
+/*
+/*有几个保留关键字：
+/*      EasyFile表示该路径映射了一个文件
+/*      EasyFileAll表示该路径将一个文件夹内的所有文件都映射到了网络上（不含文件夹本身和子文件夹）
+/*      EasyDir表示该路径将一个文件夹映射到了网上（包含本身和子文件夹）
+/*      EasyReceive表示该路径将用来接收用户上传的文件
+/*
+/*每个路径中最多出现一个关键字，出现多个或多次以第一个为准，
+/*没有关键字的路径为普通模式（处理用户请求）
+/*
+/*
+/*
+/*下方是示例
+/*
+/*
+/*端口号：{
+/*    路径：[
+/*        func://
+/*        (入参名=入参,出参名=出参)
+/*        (入参名=入参,出参名=return://出参所在文件地址)
+/*    ]
+/*    路径：[file://规则文件路径]
+/*    路径：[easy://关键字=对应的文件或文件夹路径]
+/*}
+/*
+
+
+config
+
+10086:{
+    /file:[
+        easy://EasyFile=C:/Users/huang/Desktop/GolangProject/EasyWeb/Demo/TestConf.easy
+    ]
+
+    /fileall:[
+        esay://EasyFileAll=C:/Users/huang/Desktop/GolangProject/EasyWeb/Demo
+    ]
+
+    /dir:[
+        easy://EsayDir=C:/Users/huang/Desktop/GolangProject/EasyWeb/Demo
+    ]
+
+    /receive:[
+        easy://EasyReceive=C:/Users/huang/Desktop/GolangProject/EasyWeb/Demo
+    ]
+
+    /test/func:[
+        func://
+        (Hello=Server,Hi,Client)
+        (Hello=Client,Hi,我不是客户端)
+        (Server=Hello,Client,return://C:/Users/huang/Desktop/GolangProject/EasyWeb/Demo/return.txt)
+    ]
+}
+
+10010:{
+    /file:[
+        file://C:/Users/huang/Desktop/GolangProject/EasyWeb/Demo/TestRule.easy
+    ]
+}
