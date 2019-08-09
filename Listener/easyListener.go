@@ -41,16 +41,10 @@ func (this *EasyListen) Commit() {
 }
 
 // 添加一个要监听的端口
-func (this *EasyListen) AddPort(port string) error {
+func (this *EasyListen) AddPort(port string) {
 	port = ":" + port
 	this.ports[port] = make(easyMux)
 	this.muxs[port] = http.NewServeMux()
-	err := http.ListenAndServe(this.ip+port, this.muxs[port])
-	if err != nil {
-		return err
-	}
-	return nil
-
 }
 
 // 添加一个文件映射路径
@@ -174,7 +168,7 @@ func (this *EasyListen) AddEasyFuncMux(port, mux string, listener EasyHttpListen
 			break
 		case "GET":
 			v := r.URL.Query()
-			w.Write(listener.EasyHttpListen(v, EPOST))
+			w.Write(listener.EasyHttpListen(v, EGET))
 		}
 
 	}
@@ -205,5 +199,3 @@ func (this *EasyListen) AddEasyJsonFuncMux(port, mux string, listener EasyJSONLi
 	}
 	this.ports[port][mux] = reFunc{RequestFunc: f, IsListenNow: false, MuxType: IsAFunc}
 }
-
-

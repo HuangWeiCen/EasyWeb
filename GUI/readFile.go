@@ -1,107 +1,12 @@
 package GUI
 
 import (
-	"path"
 	"os"
 	"bufio"
 	"strings"
 	"io"
 	"io/ioutil"
 )
-
-// 判断是规则文件还是配置文件并返回读取的内容，规则文件返回true
-func IsRuleAndOpen(filePath string) (*os.File, error) {
-	if path.Ext(filePath) != ".easy" {
-		return nil, NotKnowFileError
-	}
-	f, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	buf := bufio.NewReader(f)
-	for {
-		line, err := buf.ReadString('\n')
-		line = strings.TrimSpace(line)
-		if err != nil {
-			if err == io.EOF {
-				return nil, NotKnowFileError
-			}
-			return nil, err
-		}
-		if line == "config" {
-			return f, NotRuleError
-		} else if line == "rule" {
-			return f, IsRuleError
-		}
-	}
-	return nil, NotKnowFileError
-}
-
-// 读取文件并保存到自己内
-func ReadConfigFile(filePath ...string) (prs []PortRule, err error) {
-	for _, f := range filePath {
-		file, err := IsRuleAndOpen(f)
-		if err == NotRuleError {
-			pr, err := readOneConfigFile(file)
-			if err != nil {
-				return nil, err
-			}
-			prs = append(prs, pr...)
-		} else if err != nil {
-			return nil, err
-		}
-	}
-	return
-}
-
-// 读取一个文件的内容并返回一个[]RortRule
-func readOneConfigFile(file *os.File) (prs []PortRule, err error) {
-	buf := bufio.NewReader(file)
-	pr := PortRule{}
-	var startRead bool
-	var read string
-	for {
-		line, err := buf.ReadString('\n')
-		line = strings.TrimSpace(line)
-		if err != nil {
-			if err == io.EOF {
-				return prs, nil
-			}
-			return
-		}
-
-		// 跳过注释
-		if line[:2] == "/*" {
-			continue
-		}
-
-		// 读取内容,先判断要不要读
-		if startRead {
-			read += line
-		}
-
-		// 判断一个端口的开始和结束
-		if line[len(line)-1] == '}' {
-			read += line[:len(line)-1]
-			err = pr.readConfig(read[:len(read)-1]) // 右括号也被读到read中了，要把它去掉
-			if err != nil {
-				return nil, err
-			}
-			prs = append(prs, pr)
-			startRead = false
-			read = ""
-			pr = PortRule{}
-			continue
-		}
-		if i := strings.Index(line, ":{"); i != -1 {
-			pr.PortPath = ":" + line[:i]
-			startRead = true
-			read += line[i:]
-			continue
-		}
-	}
-	return
-}
 
 // 读取一个端口的内容并保存到自身
 func (this *PortRule) readConfig(constr string) error {
@@ -128,12 +33,24 @@ func (this *PortRule) readConfig(constr string) error {
 				break
 			case IsAFileFunc:
 				err := muxRule.readFile(strings.TrimSpace(read[ind : len(read)-1])) // 从类型标识之后读到右括号之前
+				muxRule.Type = IsAFunc
 				if err != nil {
 					return err
 				}
 				break
 			case IsAEasy:
 				cs := strings.Split(strings.TrimSpace(read[ind:len(read)-1]), "=")
+				if cs[0] == "EasyReceive" { // 上传需要的参数和别的不一样,要单独处理
+					muxRule.Type = IsAReceive
+					in := strings.Index(read, "(")
+					if in != -1 {
+						num := read[in+1 : len(read)-2]
+						r := Rule{}
+						r.analysis(num)
+						muxRule.Rules = append(muxRule.Rules, r)
+					}
+					break
+				}
 				switch cs[0] {
 				case "EasyFile":
 					muxRule.Type = IsAFile
@@ -144,14 +61,12 @@ func (this *PortRule) readConfig(constr string) error {
 				case "EasyDir":
 					muxRule.Type = IsADir
 					break
-				case "EasyReceive":
-					muxRule.Type = IsAReceive
-					break
 				}
 				err := muxRule.analysis(`(path=` + cs[1] + `,""="")`) // 读取时获取path的值就好
 				if err != nil {
 					return err
 				}
+				break
 			}
 
 			this.Muxs = append(this.Muxs, muxRule)

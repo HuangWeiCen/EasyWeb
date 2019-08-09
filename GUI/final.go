@@ -30,6 +30,11 @@ type PortRule struct {
 	PortPath string
 }
 
+// 创建的监听器对象
+type postListener struct {
+	MuxRule
+}
+
 type MuxType int
 
 const (
