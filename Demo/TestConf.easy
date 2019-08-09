@@ -1,3 +1,8 @@
+/*
+/*暂时有个bug没法解决,再写配置文件的时候最后一定要留一行空行,否则最后一个端口读取不到
+/*
+
+
 
 /*在网上没找到适合的文件格式，就自己造了个格式，格式本身很简单，冒号左右两边分别是端口号和一个大括号，
 /*大括号里冒号两边是路径和中括号，中括号里每个小括号代表一个规则，左中括号后面应该紧跟着类型标识
@@ -74,6 +79,6 @@ config
 
 10010:{
     /file:[
-        file://C:/Users/huang/Desktop/GolangProject/EasyWeb/Demo/TestRule.easy
+        easy://EasyFile=C:/Users/huang/Desktop/GolangProject/EasyWeb/Demo/TestConf.easy
     ]
 }

@@ -6,7 +6,6 @@ import (
 	"strings"
 	"io"
 	"io/ioutil"
-	"fmt"
 )
 
 // 读取一个端口的内容并保存到自身
@@ -47,7 +46,6 @@ func (this *PortRule) readConfig(constr string) error {
 						num := read[in+1 : len(read)-2]
 						pat := read[ind+19 : in] // 去掉前面没用的部分,去掉easy://,去掉EasyReceive=
 						r := Rule{}
-						fmt.Println(pat)
 						muxRule.analysis(`(path=` + pat + `,""="")`)
 						r.analysis(num)
 						muxRule.Rules = append(muxRule.Rules, r)
@@ -81,7 +79,7 @@ func (this *PortRule) readConfig(constr string) error {
 			continue
 		}
 		if len(constr) >= i+2 && constr[i:i+2] == ":[" {
-			this.PortPath = strings.TrimSpace(constr[lastKuo+1 : i])
+			muxRule.MuxPath = strings.TrimSpace(constr[lastKuo+1 : i])
 			// 读取类型信息，去掉空格
 			cc = strings.TrimSpace(constr[i+2 : i+9])
 			for j := i; len(cc) < 7; j++ {

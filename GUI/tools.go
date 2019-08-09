@@ -49,7 +49,7 @@ func ReadConfigFile(filePath ...string) (prs []PortRule, err error) {
 	for _, f := range filePath {
 		err := IsRule(f)
 		if err == NotRuleError {
-			pr, err := ReadOneConfigFile(f)
+			pr, err := readOneConfigFile(f)
 			if err != nil {
 				return nil, err
 			}
@@ -62,7 +62,7 @@ func ReadConfigFile(filePath ...string) (prs []PortRule, err error) {
 }
 
 // 读取一个文件的内容并返回一个[]RortRule
-func ReadOneConfigFile(file string) (prs []PortRule, err error) {
+func readOneConfigFile(file string) (prs []PortRule, err error) {
 	f, err := os.Open(file)
 
 	if err != nil {
@@ -94,6 +94,7 @@ func ReadOneConfigFile(file string) (prs []PortRule, err error) {
 
 		// 判断一个端口的开始和结束
 		if line[len(line)-1] == '}' {
+			fmt.Println("port:"+pr.PortPath)
 			read += line[:len(line)-1]
 			err = pr.readConfig(read[:len(read)-1]) // 右括号也被读到read中了，要把它去掉
 			if err != nil {
@@ -106,7 +107,7 @@ func ReadOneConfigFile(file string) (prs []PortRule, err error) {
 			continue
 		}
 		if i := strings.Index(line, ":{"); i != -1 {
-			pr.PortPath = ":" + line[:i]
+			pr.PortPath = ":" + strings.TrimSpace(line[:i])
 			startRead = true
 			read += line[i:]
 			continue
