@@ -63,7 +63,8 @@ func ReadConfigFile(filePath ...string) (prs []PortRule, err error) {
 
 // 读取一个文件的内容并返回一个[]RortRule
 func ReadOneConfigFile(file string) (prs []PortRule, err error) {
-	f, err := os.Create(file)
+	f, err := os.Open(file)
+
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +72,6 @@ func ReadOneConfigFile(file string) (prs []PortRule, err error) {
 	pr := PortRule{}
 	var startRead bool
 	var read string
-	os.Exit(0)
 	for {
 		line, err := buf.ReadString('\n')
 		line = strings.TrimSpace(line)
@@ -83,7 +83,7 @@ func ReadOneConfigFile(file string) (prs []PortRule, err error) {
 		}
 
 		// 跳过注释
-		if line[:2] == "/*" {
+		if (len(line) > 2 && line[:2] == "/*") || len(line) == 0 {
 			continue
 		}
 
