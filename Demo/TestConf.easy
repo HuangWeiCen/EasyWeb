@@ -21,6 +21,7 @@
 /*      EasyFileAll表示该路径将一个文件夹内的所有文件都映射到了网络上（不含文件夹本身和子文件夹）
 /*      EasyDir表示该路径将一个文件夹映射到了网上（包含本身和子文件夹）
 /*      EasyReceive表示该路径将用来接收用户上传的文件
+/*          EasyReceive和其它参数不同之处在于他需要设置最大接收大小和表单中文件对应的键(max,key)格式见实际案例
 /*
 /*每个路径中最多出现一个关键字，出现多个或多次以第一个为准，
 /*没有关键字的路径为普通模式（处理用户请求）
@@ -59,13 +60,15 @@ config
 
     /receive:[
         easy://EasyReceive=C:/Users/huang/Desktop/GolangProject/EasyWeb/Demo
+        /*顺序无所谓,但都要设置
+        (max=10000000,key=upload)
     ]
 
     /test/func:[
         func://
-        (Hello=Server,Hi,Client)
-        (Hello=Client,Hi,我不是客户端)
-        (Server=Hello,Client,return://C:/Users/huang/Desktop/GolangProject/EasyWeb/Demo/return.txt)
+        (Hello=Server,Hi=Client)
+        (Hello=Client,Hi=我不是客户端)
+        (Server=Hello,Client=return://C:/Users/huang/Desktop/GolangProject/EasyWeb/Demo/return.txt)
     ]
 }
 

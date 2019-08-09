@@ -46,7 +46,7 @@ func (this *PortRule) readConfig(constr string) error {
 					if in != -1 {
 						num := read[in+1 : len(read)-2]
 						r := Rule{}
-						r.analysis(num)
+						r.Analysis(num)
 						muxRule.Rules = append(muxRule.Rules, r)
 					}
 					break
@@ -119,7 +119,7 @@ func (this *MuxRule) readFile(filePath string) error {
 		}
 
 		rule := Rule{}
-		err = rule.analysis(line)
+		err = rule.Analysis(line)
 		if err != nil {
 			return err
 		}
@@ -146,7 +146,7 @@ func (this *MuxRule) analysis(constr string) error {
 		}
 		if s == ')' {
 			startRead = false
-			rule.analysis(read[:len(read)-1]) // 去掉右括号
+			rule.Analysis(read[:len(read)-1]) // 去掉右括号
 			this.Rules = append(this.Rules, rule)
 			read = ""
 			continue
@@ -156,13 +156,14 @@ func (this *MuxRule) analysis(constr string) error {
 }
 
 // 解析一条规则并保存到自身
-func (this *Rule) analysis(str string) error {
-	ss := strings.Split(str, "=")
+func (this *Rule) Analysis(str string) error {
+	str = strings.TrimSpace(str)
+	ss := strings.Split(str, ",")
 	if len(ss) != 2 {
 		return WrongFormatError
 	}
-	qs := strings.Split(ss[0], ",")
-	as := strings.Split(ss[1], ",")
+	qs := strings.Split(ss[0], "=")
+	as := strings.Split(ss[1], "=")
 	if len(qs) != 2 || len(as) != 2 {
 		return WrongFormatError
 	}
@@ -171,14 +172,18 @@ func (this *Rule) analysis(str string) error {
 	this.ComeValue = strings.TrimSpace(qs[1])
 	this.GoKey = strings.TrimSpace(as[0])
 	govalue := strings.TrimSpace(as[1])
-	if govalue[:9] != "return://" {
-		this.GoValue = govalue
-	} else {
-		read, err := ioutil.ReadFile(govalue[9:])
-		if err != nil {
-			return err
+	if len(govalue) > 9 {
+		if govalue[:9] != "return://" {
+			this.GoValue = govalue
+		} else {
+			read, err := ioutil.ReadFile(govalue[9:])
+			if err != nil {
+				return err
+			}
+			this.GoValue = read
 		}
-		this.GoValue = read
+	} else {
+		this.GoValue = govalue
 	}
 	return nil
 }

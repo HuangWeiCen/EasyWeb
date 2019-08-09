@@ -49,7 +49,7 @@ func ReadConfigFile(filePath ...string) (prs []PortRule, err error) {
 	for _, f := range filePath {
 		err := IsRuleAndOpen(f)
 		if err == NotRuleError {
-			pr, err := readOneConfigFile(f)
+			pr, err := ReadOneConfigFile(f)
 			if err != nil {
 				return nil, err
 			}
@@ -62,7 +62,7 @@ func ReadConfigFile(filePath ...string) (prs []PortRule, err error) {
 }
 
 // 读取一个文件的内容并返回一个[]RortRule
-func readOneConfigFile(file string) (prs []PortRule, err error) {
+func ReadOneConfigFile(file string) (prs []PortRule, err error) {
 	f, err := os.Create(file)
 	if err != nil {
 		return nil, err
