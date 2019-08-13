@@ -82,8 +82,6 @@ func (this *EasyListen) AddDirAllFileMux(port, mux, dirPath string) error {
 		r.ParseForm()
 		des := dirPath + "/" + r.URL.Path[len(mux):len(r.URL.Path)]
 		// string(os.PathSeparator)是反斜杠,文件地址都用的斜杠,输出出来怪怪的,干脆用"/"衔接算了
-		fmt.Println("des:")
-		fmt.Println("des:" + des)
 		if err := wantFileType(des, AFIle); err == nil {
 			if fileData, err := ioutil.ReadFile(des); err != nil {
 				log.Println("Read File Err:", err.Error())
@@ -166,14 +164,10 @@ func (this *EasyListen) AddEasyFuncMux(port, mux string, listener EasyHttpListen
 		switch r.Method {
 		case "POST":
 			v := r.PostForm
-			fmt.Println("vpost:")
-			fmt.Println(v)
 			w.Write(listener.EasyHttpListen(v, EPOST))
 			break
 		case "GET":
 			v := r.URL.Query()
-			fmt.Println("vget:")
-			fmt.Println(v)
 			w.Write(listener.EasyHttpListen(v, EGET))
 		}
 
