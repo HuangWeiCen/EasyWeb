@@ -78,10 +78,10 @@ func (this *EasyListen) AddDirAllFileMux(port, mux, dirPath string) error {
 			return err
 		}
 	}
-
 	f := func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
-		des := dirPath + string(os.PathSeparator) + r.URL.Path[len(mux):len(r.URL.Path)]
+		des := dirPath + "/" + r.URL.Path[len(mux):len(r.URL.Path)]
+		// string(os.PathSeparator)是反斜杠,文件地址都用的斜杠,输出出来怪怪的,干脆用"/"衔接算了
 		fmt.Println("des:")
 		fmt.Println("des:" + des)
 		if err := wantFileType(des, AFIle); err == nil {
@@ -100,6 +100,8 @@ func (this *EasyListen) AddDirAllFileMux(port, mux, dirPath string) error {
 			http.NotFoundHandler().ServeHTTP(w, r)
 		}
 	}
+	mux = mux + "/"
+	// go的路由匹配规则是末尾有"/"不管后面是啥都会匹配到这个路由.如果没有的话是完全匹配,就进不了这个路由了(可以删了试试效果)
 	this.ports[port][mux] = reFunc{RequestFunc: f, IsListenNow: false, MuxType: IsAFileAll}
 	return nil
 }
