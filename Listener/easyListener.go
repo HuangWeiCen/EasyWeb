@@ -166,10 +166,14 @@ func (this *EasyListen) AddEasyFuncMux(port, mux string, listener EasyHttpListen
 		switch r.Method {
 		case "POST":
 			v := r.PostForm
+			fmt.Println("vpost:")
+			fmt.Println(v)
 			w.Write(listener.EasyHttpListen(v, EPOST))
 			break
 		case "GET":
 			v := r.URL.Query()
+			fmt.Println("vget:")
+			fmt.Println(v)
 			w.Write(listener.EasyHttpListen(v, EGET))
 		}
 

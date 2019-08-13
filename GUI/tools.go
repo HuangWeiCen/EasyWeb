@@ -165,11 +165,9 @@ func NewEasyListenToPortRuleList(ip string, portRules ...PortRule) *Listener.Eas
 // 重写方法
 func (this *postListener) EasyHttpListen(values url.Values, responseType Listener.ResponseType) []byte {
 	mp := make(map[string]interface{})
-	if responseType == Listener.EPOST {
-		for _, r := range this.Rules {
-			if values.Get(r.ComeKey) == r.ComeValue {
-				mp[r.GoKey] = r.GoValue
-			}
+	for _, r := range this.Rules {
+		if values.Get(r.ComeKey) == r.ComeValue {
+			mp[r.GoKey] = r.GoValue
 		}
 	}
 	bts, err := json.Marshal(mp)
@@ -177,4 +175,14 @@ func (this *postListener) EasyHttpListen(values url.Values, responseType Listene
 		fmt.Errorf("出现异常: %s", err)
 	}
 	return bts
+}
+
+// 重写方法
+func (this *postListener) EasyJSONListen(values map[string]interface{}) (mmp map[string]interface{}) {
+	for _, r := range this.Rules {
+		if values[r.ComeKey] == r.ComeValue {
+			mmp[r.GoKey] = r.GoValue
+		}
+	}
+	return
 }
