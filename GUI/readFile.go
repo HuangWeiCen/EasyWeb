@@ -6,6 +6,7 @@ import (
 	"strings"
 	"io"
 	"io/ioutil"
+	"fmt"
 )
 
 // 读取一个端口的内容并保存到自身
@@ -25,7 +26,7 @@ func (this *PortRule) readConfig(constr string) error {
 			ind := strings.Index(read, cc)
 			switch muxRule.Type {
 			case IsAFunc:
-				err := muxRule.analysis(read[:len(read)-1]) // 右括号也被读到read中了，要把它去掉
+				err := muxRule.analysis(read[8 : len(read)-1]) // 括号和标识(func:// )也被读到read中了，要把它去掉
 				if err != nil {
 					return err
 				}
@@ -134,8 +135,11 @@ func (this *MuxRule) readFile(filePath string) error {
 	}
 }
 
+//
+
 // 解析一个路径并保存到自身
 func (this *MuxRule) analysis(constr string) error {
+	fmt.Println("输出:", constr)
 	startRead := false
 	rule := Rule{}
 	read := ""

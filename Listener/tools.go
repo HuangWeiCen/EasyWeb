@@ -12,11 +12,11 @@ func wantFileType(filePath string, wantType FileType) error {
 		return err
 	}
 	if desStat.IsDir() {
-		if wantType == ADIR {
+		if wantType == AFIle {
 			return FileNotDirError
 		}
 	} else {
-		if wantType == AFIle {
+		if wantType == ADIR {
 			return DirNotFileError
 		}
 	}

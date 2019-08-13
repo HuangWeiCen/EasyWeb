@@ -18,7 +18,7 @@ func (this *EasyListen) Listen() {
 				return
 			}
 			switch ref.MuxType {
-			case 4:
+			case IsADir:
 				this.muxs[p].Handle(m, ref.Handle)
 				break
 			default:
@@ -35,7 +35,7 @@ func (this *EasyListen) Listen() {
 func (this *EasyListen) Commit() {
 	for p, m := range this.muxs {
 		fmt.Println("开始监听端口" + p)
-		go http.ListenAndServe(p, m)
+		go http.ListenAndServe(this.ip+p, m)
 	}
 	select {}
 }
@@ -49,10 +49,10 @@ func (this *EasyListen) AddPort(port string) {
 
 // 添加一个文件映射路径
 func (this *EasyListen) AddFileMux(port, mux, filePath string) error {
+fmt.Println("jinru")
 	if err := wantFileType(filePath, AFIle); err != nil {
 		return err
 	}
-
 	f := func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		fileData, err := ioutil.ReadFile(filePath)

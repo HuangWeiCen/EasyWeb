@@ -56,7 +56,7 @@ config
     ]
 
     /fileall:[
-        esay://EasyFileAll=C:/Users/huang/Desktop/GolangProject/EasyWeb/Demo
+        easy://EasyFileAll=C:/Users/huang/Desktop/GolangProject/EasyWeb/Demo
     ]
 
     /dir:[
