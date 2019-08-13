@@ -178,11 +178,12 @@ func (this *postListener) EasyHttpListen(values url.Values, responseType Listene
 }
 
 // 重写方法
-func (this *postListener) EasyJSONListen(values map[string]interface{}) (mmp map[string]interface{}) {
+func (this *postListener) EasyJSONListen(values map[string]interface{}) (map[string]interface{}) {
+	mmp := make(map[string]interface{})
 	for _, r := range this.Rules {
 		if values[r.ComeKey] == r.ComeValue {
 			mmp[r.GoKey] = r.GoValue
 		}
 	}
-	return
+	return mmp
 }

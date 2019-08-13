@@ -187,6 +187,7 @@ func (this *EasyListen) AddEasyJsonFuncMux(port, mux string, listener EasyJSONLi
 		r.ParseForm()
 		if r.Method == "POST" {
 			read, err := ioutil.ReadAll(r.Body)
+			defer r.Body.Close()
 			if err != nil {
 				fmt.Errorf("出现异常：%s", err)
 				return

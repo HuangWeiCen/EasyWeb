@@ -188,7 +188,7 @@ func (this *Rule) analysis(str string) error {
 			if err != nil {
 				return err
 			}
-			this.GoValue = read
+			this.GoValue = string(read)
 		}
 	} else {
 		this.GoValue = govalue
