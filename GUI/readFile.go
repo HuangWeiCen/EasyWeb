@@ -59,7 +59,7 @@ func (this *PortRule) readConfig(constr string) error {
 				case "EasyFileAll":
 					muxRule.Type = IsAFileAll
 					break
-				case "EasyDir":
+				case "EsayDir":
 					muxRule.Type = IsADir
 					break
 				}

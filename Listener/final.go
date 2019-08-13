@@ -33,10 +33,13 @@ type EasyListen struct {
 }
 
 const (
-	IsAFile    MuxType = 1 // 文件映射型
-	IsAFunc    MuxType = 2 // 处理数据型
-	IsAReceive MuxType = 3 // 接收文件型
-	IsADir     MuxType = 4 // 文件夹映射类型
+	IsAFile     MuxType = 1 // 文件映射型
+	IsAFunc     MuxType = 2 // 处理数据型
+	IsAReceive  MuxType = 3 // 接收文件型
+	IsADir      MuxType = 4 // 文件夹映射类型
+	IsAFileAll  MuxType = 5 // 映射一堆文件型
+	IsAFileFunc MuxType = 6 // 映射一堆文件型
+	IsAEasy     MuxType = 7 // 特殊类型（除了2，6都是特殊类型）
 )
 
 const (

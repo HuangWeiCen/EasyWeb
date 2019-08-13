@@ -94,7 +94,7 @@ func readOneConfigFile(file string) (prs []PortRule, err error) {
 
 		// 判断一个端口的开始和结束
 		if line[len(line)-1] == '}' {
-			fmt.Println("port:"+pr.PortPath)
+			fmt.Println("port:" + pr.PortPath)
 			read += line[:len(line)-1]
 			err = pr.readConfig(read[:len(read)-1]) // 右括号也被读到read中了，要把它去掉
 			if err != nil {
@@ -107,9 +107,9 @@ func readOneConfigFile(file string) (prs []PortRule, err error) {
 			continue
 		}
 		if i := strings.Index(line, ":{"); i != -1 {
-			pr.PortPath = ":" + strings.TrimSpace(line[:i])
+			pr.PortPath = strings.TrimSpace(line[:i])
 			startRead = true
-			read += line[i:]
+			read += line[i+1:]
 			continue
 		}
 	}
@@ -143,19 +143,19 @@ func NewEasyListenToPortRuleList(ip string, portRules ...PortRule) *Listener.Eas
 				if err != nil {
 					break
 				}
-				listen.AddPostReceiveMux(i6, p.PortPath, key, m.MuxPath, path)
+				listen.AddPostReceiveMux(i6, ":"+p.PortPath, key, m.MuxPath, path)
 				break
 			case IsADir:
-				listen.AddDirMux(p.PortPath, m.MuxPath, m.Rules[0].ComeValue.(string))
+				listen.AddDirMux(":"+p.PortPath, m.MuxPath, m.Rules[0].ComeValue.(string))
 				break
 			case IsAFileAll:
-				listen.AddDirMux(p.PortPath, m.MuxPath, m.Rules[0].ComeValue.(string))
+				listen.AddDirMux(":"+p.PortPath, m.MuxPath, m.Rules[0].ComeValue.(string))
 				break
 			case IsAFile:
-				listen.AddDirMux(p.PortPath, m.MuxPath, m.Rules[0].ComeValue.(string))
+				listen.AddDirMux(":"+p.PortPath, m.MuxPath, m.Rules[0].ComeValue.(string))
 				break
 			case IsAFunc:
-				listen.AddEasyFuncMux(p.PortPath, m.MuxPath, &postListener{MuxRule{Rules: m.Rules}})
+				listen.AddEasyFuncMux(":"+p.PortPath, m.MuxPath, &postListener{MuxRule{Rules: m.Rules}})
 				break
 			}
 		}
