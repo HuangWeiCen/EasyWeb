@@ -148,10 +148,10 @@ func NewEasyListenToPortRuleList(ip string, portRules ...PortRule) *Listener.Eas
 				listen.AddDirMux(":"+p.PortPath, m.MuxPath, m.Rules[0].ComeValue.(string))
 				break
 			case IsAFileAll:
-				listen.AddDirMux(":"+p.PortPath, m.MuxPath, m.Rules[0].ComeValue.(string))
+				listen.AddDirAllFileMux(":"+p.PortPath, m.MuxPath, m.Rules[0].ComeValue.(string))
 				break
 			case IsAFile:
-				listen.AddDirMux(":"+p.PortPath, m.MuxPath, m.Rules[0].ComeValue.(string))
+				listen.AddFileMux(":"+p.PortPath, m.MuxPath, m.Rules[0].ComeValue.(string))
 				break
 			case IsAFunc:
 				listen.AddEasyFuncMux(":"+p.PortPath, m.MuxPath, &postListener{MuxRule{Rules: m.Rules}})

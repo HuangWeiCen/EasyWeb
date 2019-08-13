@@ -6,7 +6,6 @@ import (
 	"strings"
 	"io"
 	"io/ioutil"
-	"fmt"
 )
 
 // 读取一个端口的内容并保存到自身
@@ -139,7 +138,6 @@ func (this *MuxRule) readFile(filePath string) error {
 
 // 解析一个路径并保存到自身
 func (this *MuxRule) analysis(constr string) error {
-	fmt.Println("输出:", constr)
 	startRead := false
 	rule := Rule{}
 	read := ""

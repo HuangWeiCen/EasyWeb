@@ -25,6 +25,7 @@ func (this *EasyListen) Listen() {
 				this.muxs[p].HandleFunc(m, ref.RequestFunc)
 				break
 			}
+			ref.IsListenNow = true
 			fmt.Println("||		添加路由规则" + p + m)
 		}
 	}
@@ -49,7 +50,6 @@ func (this *EasyListen) AddPort(port string) {
 
 // 添加一个文件映射路径
 func (this *EasyListen) AddFileMux(port, mux, filePath string) error {
-fmt.Println("jinru")
 	if err := wantFileType(filePath, AFIle); err != nil {
 		return err
 	}
@@ -82,6 +82,8 @@ func (this *EasyListen) AddDirAllFileMux(port, mux, dirPath string) error {
 	f := func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		des := dirPath + string(os.PathSeparator) + r.URL.Path[len(mux):len(r.URL.Path)]
+		fmt.Println("des:")
+		fmt.Println("des:" + des)
 		if err := wantFileType(des, AFIle); err == nil {
 			if fileData, err := ioutil.ReadFile(des); err != nil {
 				log.Println("Read File Err:", err.Error())
@@ -98,7 +100,7 @@ func (this *EasyListen) AddDirAllFileMux(port, mux, dirPath string) error {
 			http.NotFoundHandler().ServeHTTP(w, r)
 		}
 	}
-	this.ports[port][mux] = reFunc{RequestFunc: f, IsListenNow: false, MuxType: IsAFile}
+	this.ports[port][mux] = reFunc{RequestFunc: f, IsListenNow: false, MuxType: IsAFileAll}
 	return nil
 }
 
@@ -116,33 +118,31 @@ func (this *EasyListen) AddDirMux(port, mux, dirPath string) error {
 func (this *EasyListen) AddPostReceiveMux(maxMemory int64, port, postKey, mux, dirPath string) {
 	f := func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
+			// 根据字段名获取表单文件
 			err := r.ParseMultipartForm(maxMemory)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				log.Printf("Set max memory failed: %s\n", err)
+			}
+			formFile, header, err := r.FormFile(postKey)
+			if err != nil {
+				log.Printf("Get form file failed: %s\n", err)
 				return
 			}
+			defer formFile.Close()
 
-			m := r.MultipartForm
+			// 创建保存文件
+			destFile, err := os.Create(dirPath + "/" + header.Filename)
+			if err != nil {
+				log.Printf("Create failed: %s\n", err)
+				return
+			}
+			defer destFile.Close()
 
-			files := m.File[postKey]
-			for i, _ := range files {
-				file, err := files[i].Open()
-				defer file.Close()
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-				dst, err := os.Create(dirPath + files[i].Filename)
-				defer dst.Close()
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-				if _, err := io.Copy(dst, file); err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-
+			// 读取表单文件，写入保存文件
+			_, err = io.Copy(destFile, formFile)
+			if err != nil {
+				log.Printf("Write file failed: %s\n", err)
+				return
 			}
 		} else {
 			w.WriteHeader(http.StatusMethodNotAllowed)
