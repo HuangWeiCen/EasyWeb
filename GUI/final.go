@@ -9,6 +9,11 @@ var (
 	WrongFormatError error = errors.New("Wrong format")
 )
 
+var (
+	confIp    string     = "0.0.0.0"
+	PortRules []PortRule = []PortRule{}
+)
+
 // 一条规则
 type Rule struct {
 	ComeKey   string      // 入参键
@@ -36,6 +41,16 @@ type postListener struct {
 }
 
 type MuxType int
+
+type SetErrorString string
+
+const (
+	SetErrStr         SetErrorString = "设置期间程序抛出异常"
+	SetFailErrStr     SetErrorString = "设置失败了"
+	RuleMissingErrStr SetErrorString = "规则没有传全"
+	RuleErrStr        SetErrorString = "传来的规则有问题"
+	SuccessErrStr     SetErrorString = "成功了没异常"
+)
 
 const (
 	IsAFile     MuxType = 1 // 文件映射型
