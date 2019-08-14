@@ -37,7 +37,7 @@ json报文三:
  */
 
 // 解析and监听
-func jieXiAndJianTing(port, mux string) {
+func JieXiAndJianTing(port, mux string) {
 	if mux[0] != '/' {
 		mux = "/" + mux
 	}
@@ -65,22 +65,29 @@ func jieXi1(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Printf("出现异常 : %s", err)
 		}
-		returnmap["Set"] = "F"
+		if errstr == SuccessErrStr {
+			returnmap["Set"] = "T"
+		} else {
+			returnmap["Set"] = "F"
+		}
 		returnmap["Reason"] = string(errstr)
-		err = json.Unmarshal(rebt, returnmap)
+		rebt, err = json.Marshal(returnmap)
 		if err != nil {
-			err = json.Unmarshal(rebt, returnmap)
+			rebt, err = json.Marshal(returnmap)
 			for {
 				if err != nil {
 					fmt.Printf("出现异常 : %s", err)
 					returnmap["Set"] = "F"
 					returnmap["Reason"] = string(SetErrStr)
-					err = json.Unmarshal(rebt, returnmap)
+					rebt, err = json.Marshal(returnmap)
 				} else {
 					w.Write(rebt)
 					return
 				}
 			}
+		} else {
+			w.Write(rebt)
+			return
 		}
 	} // 异常处理
 	havePath := func(m map[string]interface{}) bool {
@@ -110,7 +117,6 @@ func jieXi1(w http.ResponseWriter, r *http.Request) {
 		switch { // 这算不算go的语法糖
 		case m["Ip"] != nil:
 			cip = m["Ip"].(string)
-			fallthrough
 		case m["Port"] != nil:
 			cport = m["Port"].(string)
 			fallthrough
@@ -120,20 +126,26 @@ func jieXi1(w http.ResponseWriter, r *http.Request) {
 				errF(RuleErrStr, nil)
 			}
 			fallthrough
-		case m["Path"] != nil:
-			cpath = m["Path"].(string)
-			fallthrough
+			// 稀奇古怪的go语言,下面的这段代码会报:"interface conversion: interface {} is nil, not string"
+			// 蜜汁程序,先判定为非空,再一本正经的告诉我这是空的无法转换类型
+			/*case m["Path"] != nil:
+				cpath = m["Path"].(string)
+				fallthrough*/
 		case m["Type"] != nil:
-			ctype = m["Type"].(string)
+			if m["Type"] != nil {//这个语法糖跟搞笑一样,判了空跟没判一样
+				ctype = m["Type"].(string)
+			}
 			switch ctype {
 			case "Normal":
-				_, err := os.Stat(m["Path"].(string))
-				if err == nil {
-					cpath = m["Path"].(string)
+				if m["Path"] != nil {
+					_, err := os.Stat(m["Path"].(string))
+					if err == nil {
+						cpath = m["Path"].(string)
+					}
 				}
 				rules = make(map[string]Rule)
 				for k, v := range m {
-					if k[len(k)-1] == '2' || m[k[:len(k)-1]+"1"] != nil {
+					if k[len(k)-1] == '2' && m[k[:len(k)-1]+"1"] != nil {
 						gogo := strings.Split(v.(string), "=") // go 是关键字
 						come := strings.Split(m[k[:len(k)-1]+"1"].(string), "=")
 						if len(gogo) != 2 || len(come) != 2 {
@@ -170,11 +182,17 @@ func jieXi1(w http.ResponseWriter, r *http.Request) {
 		if cport == "" {
 			if cip != "" {
 				confIp = cip
+				errF(SuccessErrStr, nil)
+				return
 			}
-			if m["Start"].(string) == "ok" {
+			if m["Start"] != nil && m["Start"].(string) == "ok" {
+				fmt.Print("PortRules:")
+				fmt.Println(PortRules)
 				l := NewEasyListenToPortRuleList(confIp, PortRules...)
 				l.Listen()
-				l.Commit()
+				go l.Commit() // Commit方法里面有个死锁,要是在主线程运行这个方法后面的都不用运行了
+				errF(SuccessErrStr, nil)
+				return
 			}
 		} else {
 			mr := MuxRule{MuxPath: cmux}
@@ -191,6 +209,7 @@ func jieXi1(w http.ResponseWriter, r *http.Request) {
 					if p.PortPath == cport {
 						for _, m := range p.Muxs {
 							if m.MuxPath == cmax {
+								m.Type = mr.Type
 								m.Rules = append(m.Rules, mr.Rules...)
 								errF(SuccessErrStr, nil)
 								return
@@ -207,12 +226,14 @@ func jieXi1(w http.ResponseWriter, r *http.Request) {
 				errF(SuccessErrStr, nil)
 				return
 			} else if ctype == "Upload" {
+				mr.Type = IsAReceive
 				mr.Rules = append(mr.Rules, Rule{ComeKey: "path", ComeValue: cpath})
 				mr.Rules = append(mr.Rules, Rule{ComeKey: "max", ComeValue: cmax, GoKey: "key", GoValue: cupkey})
 				for _, p := range PortRules {
 					if p.PortPath == cport {
 						for _, m := range p.Muxs {
 							if m.MuxPath == cmax {
+								m.Type = mr.Type
 								m.Rules = append(m.Rules, mr.Rules...)
 								errF(SuccessErrStr, nil)
 								return
@@ -230,6 +251,7 @@ func jieXi1(w http.ResponseWriter, r *http.Request) {
 				errF(SuccessErrStr, nil)
 				return
 			} else if ctype == "Normal" {
+				mr.Type = IsAFunc
 				if cpath != "" {
 					prs, err := readOneConfigFile(cpath)
 					if err != nil {
@@ -244,6 +266,7 @@ func jieXi1(w http.ResponseWriter, r *http.Request) {
 					if p.PortPath == cport {
 						for _, m := range p.Muxs {
 							if m.MuxPath == cmax {
+								m.Type = mr.Type
 								m.Rules = append(m.Rules, mr.Rules...)
 								errF(SuccessErrStr, nil)
 								return

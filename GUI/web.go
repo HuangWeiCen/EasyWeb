@@ -12,6 +12,6 @@ func WEB() {
 	mux := flag.String("mux", "/", "设置程序监听的路由地址,程序将从端口的此路由获得参数信息")
 	flag.Parse()
 	confIp = *ip
-	go jieXiAndJianTing(*port, *mux)
+	go JieXiAndJianTing(*port, *mux)
 	select {} // 主线程空着备用挺好
 }
