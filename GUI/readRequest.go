@@ -41,14 +41,14 @@ func JieXiAndJianTing(port, mux string) {
 	if mux[0] != '/' {
 		mux = "/" + mux
 	}
-	PortRules = []PortRule{}
-	http.HandleFunc(mux, jieXi1)
+
+	http.HandleFunc(mux, jieXi)
 	http.ListenAndServe(":"+port, nil)
 }
 
 // 解析控制界面发送的数据
 // 早晚得重构,一个方法写的太长了,还很难分成几段
-func jieXi1(w http.ResponseWriter, r *http.Request) {
+func jieXi(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	var cip string                       // IP地址
 	var cport string                     // 端口号
@@ -132,7 +132,7 @@ func jieXi1(w http.ResponseWriter, r *http.Request) {
 				cpath = m["Path"].(string)
 				fallthrough*/
 		case m["Type"] != nil:
-			if m["Type"] != nil {//这个语法糖跟搞笑一样,判了空跟没判一样
+			if m["Type"] != nil { // 这个语法糖跟搞笑一样,判了空跟没判一样
 				ctype = m["Type"].(string)
 			}
 			switch ctype {
@@ -177,7 +177,9 @@ func jieXi1(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
-
+		fmt.Println("间隔")
+		fmt.Print("PortRules:")
+		fmt.Println(PortRules)
 		// 判断这条请求发全了木有
 		if cport == "" {
 			if cip != "" {
@@ -205,21 +207,23 @@ func jieXi1(w http.ResponseWriter, r *http.Request) {
 					mr.Type = IsADir
 				}
 				mr.Rules = append(mr.Rules, Rule{ComeKey: "path", ComeValue: cpath})
-				for _, p := range PortRules {
+				for ip, p := range PortRules {
 					if p.PortPath == cport {
-						for _, m := range p.Muxs {
+						for im, m := range p.Muxs {
 							if m.MuxPath == cmax {
-								m.Type = mr.Type
-								m.Rules = append(m.Rules, mr.Rules...)
+								PortRules[ip].Muxs[im].Type = mr.Type
+								PortRules[ip].Muxs[im].Rules = append(m.Rules, mr.Rules...)
 								errF(SuccessErrStr, nil)
 								return
 							}
 						}
-						p.Muxs = append(p.Muxs, mr)
+						PortRules[ip].Muxs = append(p.Muxs, mr)
 						errF(SuccessErrStr, nil)
 						return
+
 					}
 				}
+				fmt.Println("都不一样")
 				p := PortRule{PortPath: cport, Muxs: []MuxRule{}}
 				p.Muxs = append(p.Muxs, mr)
 				PortRules = append(PortRules, p)
@@ -229,17 +233,17 @@ func jieXi1(w http.ResponseWriter, r *http.Request) {
 				mr.Type = IsAReceive
 				mr.Rules = append(mr.Rules, Rule{ComeKey: "path", ComeValue: cpath})
 				mr.Rules = append(mr.Rules, Rule{ComeKey: "max", ComeValue: cmax, GoKey: "key", GoValue: cupkey})
-				for _, p := range PortRules {
+				for ip, p := range PortRules {
 					if p.PortPath == cport {
-						for _, m := range p.Muxs {
+						for im, m := range p.Muxs {
 							if m.MuxPath == cmax {
-								m.Type = mr.Type
-								m.Rules = append(m.Rules, mr.Rules...)
+								PortRules[ip].Muxs[im].Type = mr.Type
+								PortRules[ip].Muxs[im].Rules = append(m.Rules, mr.Rules...)
 								errF(SuccessErrStr, nil)
 								return
 							}
 						}
-						p.Muxs = append(p.Muxs, mr)
+						PortRules[ip].Muxs = append(p.Muxs, mr)
 						errF(SuccessErrStr, nil)
 						return
 
@@ -262,17 +266,17 @@ func jieXi1(w http.ResponseWriter, r *http.Request) {
 				for _, r := range rules {
 					mr.Rules = append(mr.Rules, r)
 				}
-				for _, p := range PortRules {
+				for ip, p := range PortRules {
 					if p.PortPath == cport {
-						for _, m := range p.Muxs {
+						for im, m := range p.Muxs {
 							if m.MuxPath == cmax {
-								m.Type = mr.Type
-								m.Rules = append(m.Rules, mr.Rules...)
+								PortRules[ip].Muxs[im].Type = mr.Type
+								PortRules[ip].Muxs[im].Rules = append(m.Rules, mr.Rules...)
 								errF(SuccessErrStr, nil)
 								return
 							}
 						}
-						p.Muxs = append(p.Muxs, mr)
+						PortRules[ip].Muxs = append(p.Muxs, mr)
 						errF(SuccessErrStr, nil)
 						return
 
@@ -286,6 +290,7 @@ func jieXi1(w http.ResponseWriter, r *http.Request) {
 			}
 
 		}
-
+		fmt.Print("PortRules:")
+		fmt.Println(PortRules)
 	}
 }

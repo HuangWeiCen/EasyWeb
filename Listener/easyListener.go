@@ -109,6 +109,7 @@ func (this *EasyListen) AddDirMux(port, mux, dirPath string) error {
 	if err := wantFileType(dirPath, ADIR); err != nil {
 		return err
 	}
+	mux = mux + "/"
 	handle := http.StripPrefix(mux, http.FileServer(http.Dir(dirPath)))
 	this.ports[port][mux] = reFunc{Handle: handle, IsListenNow: false, MuxType: IsADir}
 	return nil
